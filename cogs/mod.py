@@ -1097,7 +1097,7 @@ class Mod:
 
     @_filter.command(name="remove", pass_context=True)
     async def filter_remove(self, ctx, *words: str):
-        """Retire une expression du filtre""""
+        """Retire une expression du filtre"""
         if words == ():
             await send_cmd_help(ctx)
             return
