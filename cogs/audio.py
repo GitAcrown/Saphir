@@ -1904,7 +1904,7 @@ class Audio:
                         if self._get_queue_repeat(server) is False:
                             self._set_queue_nowplaying(server, None)
                         self.skip_votes[server.id] = []
-                        await self.bot.say("Vote threshold met. Skipping...")
+                        await self.bot.say("Nombre de votes atteint. Suivant...")
                         return
                     else:
                         reply += " **Votes: %d/%d**" % (num_votes, num_members)
