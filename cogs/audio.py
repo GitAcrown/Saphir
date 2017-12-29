@@ -1958,7 +1958,7 @@ class Audio:
                 dur = None
             txt = "**Chaine:** {}\n" \
                    "**Vues:** {}\n" \
-                   "**Durée:** {}\n"
+                   "**Durée:** {}\n".format(song.uploader, song.view_count, dur)
             em = discord.Embed(title=song.title, description=txt, url=song.webpage_url)
             em.set_image(url="https://img.youtube.com/vi/{}/0.jpg".format(
                 song.webpage_url.split("=")[1]) if "=" in song.webpage_url else "")
