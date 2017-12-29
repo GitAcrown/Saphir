@@ -1744,14 +1744,61 @@ class Audio:
         """Not a command, use `queue` with no args to call this."""
         server = ctx.message.server
         channel = ctx.message.channel
+        now_playing = self._get_queue_nowplaying(server)
         if server.id not in self.queue:
+            if now_playing:
+                txt = ""
+                if hasattr(now_playing, 'creator'):
+                    txt += "**Auteur:** *{}*\n".format(now_playing.creator)
+                if hasattr(now_playing, 'view_count'):
+                    txt += "**Vues:** *{}*\n".format(now_playing.view_count)
+                if hasattr(now_playing, 'duration'):
+                    m, s = divmod(now_playing.duration, 60)
+                    h, m = divmod(m, 60)
+                    if h:
+                        dur = "{0}:{1:0>2}:{2:0>2}".format(h, m, s)
+                    else:
+                        dur = "{0}:{1:0>2}".format(m, s)
+                else:
+                    dur = None
+                if dur:
+                    txt += "**Durée:** *{}*\n".format(dur)
+                em = discord.Embed(title=now_playing.title, description=txt, url=now_playing.webpage_url)
+                em.set_thumbnail(url="https://img.youtube.com/vi/{}/0.jpg".format(
+                    now_playing.webpage_url.split("=")[1]) if "=" in now_playing.webpage_url else "")
+                em.set_footer(text="Aucun morceau dans la liste d'attente")
+                await self.bot.say(embed=em)
+                return
+
             await self.bot.say("**Vide** | Faîtes `&q <url|recherche>` pour ajouter un morceau")
             return
         elif len(self.queue[server.id][QueueKey.QUEUE]) == 0:
+            if now_playing:
+                txt = ""
+                if hasattr(now_playing, 'creator'):
+                    txt += "**Auteur:** *{}*\n".format(now_playing.creator)
+                if hasattr(now_playing, 'view_count'):
+                    txt += "**Vues:** *{}*\n".format(now_playing.view_count)
+                if hasattr(now_playing, 'duration'):
+                    m, s = divmod(now_playing.duration, 60)
+                    h, m = divmod(m, 60)
+                    if h:
+                        dur = "{0}:{1:0>2}:{2:0>2}".format(h, m, s)
+                    else:
+                        dur = "{0}:{1:0>2}".format(m, s)
+                else:
+                    dur = None
+                if dur:
+                    txt += "**Durée:** *{}*\n".format(dur)
+                em = discord.Embed(title=now_playing.title, description=txt, url=now_playing.webpage_url)
+                em.set_thumbnail(url="https://img.youtube.com/vi/{}/0.jpg".format(
+                    now_playing.webpage_url.split("=")[1]) if "=" in now_playing.webpage_url else "")
+                em.set_footer(text="Aucun morceau dans la liste d'attente")
+                await self.bot.say(embed=em)
+                return
             await self.bot.say("**Vide** | Faîtes `&q <url|recherche>` pour ajouter un morceau")
             return
 
-        now_playing = self._get_queue_nowplaying(server)
         em = discord.Embed(title="Morceaux à venir")
 
         if now_playing is not None:
