@@ -1961,7 +1961,7 @@ class Audio:
                    "**Durée:** {}\n"
             em = discord.Embed(title=song.title, description=txt, url=song.webpage_url)
             em.set_image(url="https://img.youtube.com/vi/{}/0.jpg".format(
-                now_playing.webpage_url.split("=")[1]) if "=" in now_playing.webpage_url else "")
+                song.webpage_url.split("=")[1]) if "=" in song.webpage_url else "")
             await self.bot.say(embed=em)
         else:
             await self.bot.say("**Darude - Sandstorm**")
