@@ -21,6 +21,8 @@ import subprocess
 import urllib.parse
 from enum import Enum
 
+# Version remise à niveau par Acrown#4424
+
 __author__ = "tekulvw"
 __version__ = "0.1.1"
 
@@ -308,7 +310,7 @@ class Downloader(threading.Thread):
 
 
 class Audio:
-    """Music Streaming."""
+    """Streaming de musique dans les salons vocaux"""
 
     def __init__(self, bot, player):
         self.bot = bot
@@ -502,8 +504,8 @@ class Audio:
         invalid_downloads = [d for d in downloaders if d.error is not None]
         invalid_number = len(invalid_downloads)
         if (invalid_number > 0):
-            await self.bot.send_message(channel, "The queue contains {} item(s)"
-                                                 " that can not be played.".format(invalid_number))
+            await self.bot.send_message(channel, "Cette liste contient {} éléments"
+                                                 " qui ne peuvent pas être joués.".format(invalid_number))
 
         return songs
 
@@ -703,7 +705,7 @@ class Audio:
         except asyncio.futures.TimeoutError as e:
             log.exception(e)
             self.connect_timers[server.id] = time.time() + 300
-            raise ConnectTimeout("Discord me refuse la connexion au channel. Veuillez réessayez dans 10 minutes")
+            raise ConnectTimeout("Discord me refuse la connexion au channel. Veuillez réessayez dans 10 minutes...")
 
     def _list_local_playlists(self):
         ret = []
@@ -873,13 +875,12 @@ class Audio:
             try:
                 song = await self._guarantee_downloaded(server, url)
             except YouTubeDlError as e:
-                message = ("Impossible de jouer '{}' à cause de:\n"
-                           "'{}'".format(clean_url, str(e)))
+                message = "**Erreur de téléchargement** | Impossible de jouer `{}`".format(clean_url)
                 message = escape(message, mass_mentions=True)
                 await self.bot.send_message(channel, message)
                 return
             except MaximumLength:
-                message = ("Impossible de jouer '{}' car ça dépasse la limite de durée imposée.".format(clean_url))
+                message = ("**Limite de temps** | `{}` dépasse la limite de temps imposée".format(clean_url))
                 message = escape(message, mass_mentions=True)
                 await self.bot.send_message(channel, message)
                 return
@@ -1301,7 +1302,8 @@ class Audio:
         while len(list(self.bot.voice_clients)) != 0:
             vc = list(self.bot.voice_clients)[0]
             await self._stop_and_disconnect(vc.server)
-        await self.bot.say("Fait.")
+        await self.bot.say("**Succès** | J'ai été déconnecté de tous les channels (Si ce n'est pas le cas, veuillez me "
+                           "redémarrer)")
 
     @commands.command(hidden=True, pass_context=True, no_pm=True)
     @checks.is_owner()
@@ -1369,7 +1371,7 @@ class Audio:
         lists = self._list_local_playlists()
 
         if not any(map(lambda l: os.path.split(l)[1] == name, lists)):
-            await self.bot.say("Plyalist locale introuvable.")
+            await self.bot.say("Playlist locale introuvable.")
             return
 
         self._play_local_playlist(server, name, channel)
@@ -1379,7 +1381,7 @@ class Audio:
         """Liste les playlists locales"""
         playlists = ", ".join(self._list_local_playlists())
         if playlists:
-            playlists = "Playlists locales disponibles:\n\n" + playlists
+            playlists = "**Playlists locales disponibles:**\n\n" + playlists
             for page in pagify(playlists, delims=[" "]):
                 await self.bot.say(page)
         else:
@@ -1397,12 +1399,12 @@ class Audio:
         voice_client = self.voice_client(server)
 
         if not hasattr(voice_client, 'audio_player'):
-            await self.bot.say("Rien ne joue.")
+            await self.bot.say("**Erreur** | Rien ne joue")
         elif voice_client.audio_player.is_playing():
             voice_client.audio_player.pause()
-            await self.bot.say("**Pause**")
+            await self.bot.say("**Morceau mis en pause** | Tapez `&resume` pour relancer le morceau")
         else:
-            await self.bot.say("Rien ne joue.")
+            await self.bot.say("**Erreur** | Rien ne joue")
 
     @commands.command(pass_context=True, no_pm=True)
     async def play(self, ctx, *, url_or_search_terms):
@@ -1498,9 +1500,9 @@ class Audio:
 
             self.voice_client(server).audio_player.stop()
 
-            await self.bot.say("**Retour au morceau précédent**")
+            await self.bot.say("**Retour** | Le morceau précédent va être joué...")
         else:
-            await self.bot.say("**Impossible** | Rien n'est joué")
+            await self.bot.say("**Erreur** | Rien ne joue")
 
     @commands.group(pass_context=True, no_pm=True)
     async def playlist(self, ctx):
@@ -1526,7 +1528,7 @@ class Audio:
         playlist.server = server
 
         self._save_playlist(server, name, playlist)
-        await self.bot.say("Playlist vide '{}' enregistrée.".format(name))
+        await self.bot.say("**Enregistrée** | La playlist '{}' (vide) est disponible".format(name))
 
     @playlist.command(pass_context=True, no_pm=True, name="add")
     async def playlist_add(self, ctx, name, url):
@@ -1542,11 +1544,10 @@ class Audio:
                 await self.bot.say("**Patientez* | J'énumère et analyse des morceaux...")
                 songlist = await self._parse_playlist(url)
             except InvalidPlaylist:
-                await self.bot.say("L'URL de la playlist est invalide.")
+                await self.bot.say("**URL Invalide** | L'identifiant de la playlist est introuvable dans l'URL")
                 return
             except YouTubeDlError as e:
-                await self.bot.say("Il y a eu une erreur pendant l'ajout:\n"
-                                   "'{}'".format(str(e)))
+                await self.bot.say("**Erreur de téléchargement** | `{}`".format(str(e)))
                 return
 
             playlist = self._make_playlist(author, url, songlist)
@@ -1710,7 +1711,7 @@ class Audio:
         if server.id not in self.queue:
             log.debug("Something went wrong, we're connected but have no"
                       " queue entry.")
-            raise VoiceNotConnected("**Aucune liste ne semble être disponible**")
+            raise VoiceNotConnected("**Erreur** | Je suis connecté mais aucune liste n'est disponible")
 
         url = url.strip("<>")
 
@@ -1737,30 +1738,48 @@ class Audio:
             log.debug("queueing to the actual queue for sid {}".format(
                 server.id))
             self._add_to_queue(server, url, channel)
-        await self.bot.say("**Morceau ajouté**")
+        await self.bot.say("**Morceau ajouté**") # TODO: Informations
 
     async def _queue_list(self, ctx):
         """Not a command, use `queue` with no args to call this."""
         server = ctx.message.server
         channel = ctx.message.channel
         if server.id not in self.queue:
-            await self.bot.say("**Rien ne joue sur ce serveur**")
+            await self.bot.say("**Vide** | Faîtes `&q <url|recherche>` pour ajouter un morceau")
             return
         elif len(self.queue[server.id][QueueKey.QUEUE]) == 0:
-            await self.bot.say("**Rien n'est joué sur ce serveur**")
+            await self.bot.say("**Vide** | Faîtes `&q <url|recherche>` pour ajouter un morceau")
             return
 
-        msg = ""
-
         now_playing = self._get_queue_nowplaying(server)
+        em = discord.Embed(title="Morceaux à venir")
 
         if now_playing is not None:
-            msg += "\n***En ce moment:***\n{}\n".format(now_playing.title)
+            txt = ""
+            if hasattr(now_playing, 'creator'):
+                txt += "**Auteur:** *{}*\n".format(now_playing.creator)
+            if hasattr(now_playing, 'view_count'):
+                txt += "**Vues:** *{}*\n".format(now_playing.view_count)
+            if hasattr(now_playing, 'duration'):
+                m, s = divmod(now_playing.duration, 60)
+                h, m = divmod(m, 60)
+                if h:
+                    dur = "{0}:{1:0>2}:{2:0>2}".format(h, m, s)
+                else:
+                    dur = "{0}:{1:0>2}".format(m, s)
+            else:
+                dur = None
+            if dur:
+                txt += "**Durée:** *{}*\n".format(dur)
+            em = discord.Embed(title=now_playing.title, description=txt, url=now_playing.webpage_url)
+            em.set_thumbnail(url="https://img.youtube.com/vi/{}/0.jpg".format(
+                now_playing.webpage_url.split("=")[1]) if "=" in now_playing.webpage_url else "")
 
         queued_song_list = self._get_queue(server, 5)
         tempqueued_song_list = self._get_queue_tempqueue(server, 5)
 
-        await self.bot.say("**Récupération...**")
+        em.set_footer(text="Chargement | Patientez...")
+        mess = await self.bot.say(embed=em)
 
         queue_song_list = await self._download_all(queued_song_list, channel)
         tempqueue_song_list = await self._download_all(tempqueued_song_list, channel)
@@ -1779,9 +1798,10 @@ class Audio:
                 song_info.append("{}. {.title}".format(num, song))
             except AttributeError:
                 song_info.append("{}. {.webpage_url}".format(num, song))
-        msg += "\n***Ensuite:***\n" + "\n".join(song_info)
+        em.add_field(name="A venir", value="\n".join(song_info))
 
-        await self.bot.say(msg)
+        em.set_footer(text="")
+        await self.bot.edit_message(mess, embed=em)
 
     @commands.group(pass_context=True, no_pm=True)
     async def repeat(self, ctx):
@@ -1936,14 +1956,13 @@ class Audio:
                     dur = "{0}:{1:0>2}".format(m, s)
             else:
                 dur = None
-            msg = ("\n**Titre:** {}\n**Auteur:** {}\n**Chaine:** {}\n"
-                   "**Vues:** {}\n**Durée:** {}\n\n<{}>".format(
-                song.title, song.creator, song.uploader,
-                song.view_count, dur, song.webpage_url))
-            await self.bot.say(msg.replace("**Auteur:** None\n", "")
-                               .replace("**Vues:** None\n", "")
-                               .replace("**Chaine:** None\n", "")
-                               .replace("**Durée:** None\n", ""))
+            txt = "**Chaine:** {}\n" \
+                   "**Vues:** {}\n" \
+                   "**Durée:** {}\n"
+            em = discord.Embed(title=song.title, description=txt, url=song.webpage_url)
+            em.set_image(url="https://img.youtube.com/vi/{}/0.jpg".format(
+                now_playing.webpage_url.split("=")[1]) if "=" in now_playing.webpage_url else "")
+            await self.bot.say(embed=em)
         else:
             await self.bot.say("**Darude - Sandstorm**")
 
