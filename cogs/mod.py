@@ -455,7 +455,7 @@ class Mod:
             await self.bot.say("**Impossible** | Je n'ai pas le droit de faire ça...")
 
     @commands.group(pass_context=True, no_pm=True, invoke_without_command=True)
-    @checks.mod_or_permissions(administrator=True)
+    @checks.mod_or_permissions(ban_members=True)
     async def mute(self, ctx, user : discord.Member, *, reason: str = None):
         """Mute un utilisateur dans le channel/serveur en cours.
 
@@ -463,7 +463,7 @@ class Mod:
         if ctx.invoked_subcommand is None:
             await ctx.invoke(self.channel_mute, user=user, reason=reason)
 
-    @checks.mod_or_permissions(administrator=True)
+    @checks.mod_or_permissions(ban_members=True)
     @mute.command(name="channel", pass_context=True, no_pm=True)
     async def channel_mute(self, ctx, user : discord.Member, *, reason: str = None):
         """Mute un utilisateur dans le channel en cours."""
@@ -496,7 +496,7 @@ class Mod:
                                 reason=reason)
             await self.bot.say("**Muet** | L'utilisateur ne peut plus parler sur ce channel")
 
-    @checks.mod_or_permissions(administrator=True)
+    @checks.mod_or_permissions(ban_members=True)
     @mute.command(name="server", pass_context=True, no_pm=True)
     async def server_mute(self, ctx, user : discord.Member, *, reason: str = None):
         """Mute un utilisateur sur le serveur en cours"""
@@ -538,7 +538,7 @@ class Mod:
         await self.bot.say("**Muet** | L'utilisateur ne peut plus parler sur tous les channels de ce serveur")
 
     @commands.group(pass_context=True, no_pm=True, invoke_without_command=True)
-    @checks.mod_or_permissions(administrator=True)
+    @checks.mod_or_permissions(ban_members=True)
     async def unmute(self, ctx, user : discord.Member):
         """Démute un utilisateur sur le channel/serveur en cours
 
@@ -546,7 +546,7 @@ class Mod:
         if ctx.invoked_subcommand is None:
             await ctx.invoke(self.channel_unmute, user=user)
 
-    @checks.mod_or_permissions(administrator=True)
+    @checks.mod_or_permissions(ban_members=True)
     @unmute.command(name="channel", pass_context=True, no_pm=True)
     async def channel_unmute(self, ctx, user : discord.Member):
         """Démute un utilisateur du channel en cours"""
@@ -587,7 +587,7 @@ class Mod:
             dataIO.save_json("data/mod/perms_cache.json", self._perms_cache)
             await self.bot.say("**Démute** | L'utilisateur peut de nouveau parler.")
 
-    @checks.mod_or_permissions(administrator=True)
+    @checks.mod_or_permissions(ban_members=True)
     @unmute.command(name="server", pass_context=True, no_pm=True)
     async def server_unmute(self, ctx, user : discord.Member):
         """Démute sur tout le serveur un utilisateur"""
