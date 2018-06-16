@@ -6,3 +6,4 @@ wikipedia
 wikipedia-api
 sumy
 numpy
+pyfootball
