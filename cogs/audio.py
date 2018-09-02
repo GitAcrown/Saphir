@@ -17,6 +17,7 @@ import asyncio
 import math
 import time
 import inspect
+import lyricwikia
 import subprocess
 import urllib.parse
 from enum import Enum
@@ -1503,6 +1504,29 @@ class Audio:
             await self.bot.say("**Retour** | Le morceau précédent va être joué...")
         else:
             await self.bot.say("**Erreur** | Rien ne joue")
+            
+    @commands.command(pass_context=True)
+    async def paroles(self, ctx, artiste, *titre):
+        """Cherche les paroles pour une musique"""
+        titre = " ".join(titre)
+        try:
+            paroles = lyricwikia.get_lyrics(artiste, titre)
+            splitp = paroles.split("\n")
+            texte = ""
+            n = 1
+            for i in splitp:
+                texte += i + "\n"
+                if len(texte) > (1990 * n):
+                    em = discord.Embed(title="{} - {}".format(artiste, titre), description = paroles)
+                    em.set_footer(text="— Page {}".format(n))
+                    await self.bot.say(embed=em)
+                    texte = ""
+                    n += 1
+            em = discord.Embed(title="{} - {}".format(artiste, titre), description = paroles)
+            em.set_footer(text="— Page {}".format(n))
+            await self.bot.say(embed=em)
+        except:
+            await self.bot.say("Je n'ai pas trouvé les paroles de cette chanson. \n• Assurez-vous d'avoir indiqué le bon artiste et le bon titre. \n• N'oubliez pas les éventuels guillemets")
 
     @commands.group(pass_context=True, no_pm=True)
     async def playlist(self, ctx):
