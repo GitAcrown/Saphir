@@ -106,6 +106,7 @@ class Mod:
         self.temp_cache = TempCache(bot)
         perms_cache = dataIO.load_json("data/mod/perms_cache.json")
         self._perms_cache = defaultdict(dict, perms_cache)
+        self.karma = self.bot.get_cog("Karma").api
 
     @commands.group(pass_context=True, no_pm=True)
     @checks.serverowner_or_permissions(administrator=True)
@@ -300,6 +301,7 @@ class Mod:
                                 user=user,
                                 reason=reason)
             await self.bot.say("**Fait** | Bye bye !")
+            await self.karma.send_log(server, "kick", "Kick", "{} à été kick par {}".format(user.name, author.name))
         except discord.errors.Forbidden:
             await self.bot.say("**Erreur** | Je n'ai pas le droit de faire ça")
         except Exception as e:
@@ -346,6 +348,7 @@ class Mod:
                                 user=user,
                                 reason=reason)
             await self.bot.say("**Fait** | A qui le prochain ?")
+            await self.karma.send_log(server, "ban", "Bannissement", "{} à été banni par {}".format(user.name, author.name))
         except discord.errors.Forbidden:
             await self.bot.say("**Erreur** | Je n'ai pas le droit de faire ça")
         except Exception as e:
@@ -390,6 +393,8 @@ class Mod:
                                 user=user,
                                 reason=reason)
             await self.bot.say("**Fait** | Eheh, facile.")
+            await self.karma.send_log(server, "ban", "Bannissement préventif", "{} à été banni préventivement par {}
+                                      ".format(user.name, author.name))
 
     @commands.command(no_pm=True, pass_context=True)
     @checks.admin_or_permissions(ban_members=True)
@@ -433,6 +438,7 @@ class Mod:
                 self.temp_cache.add(user, server, "UNBAN")
                 await self.bot.unban(server, user)
                 await self.bot.say("**Fait** | Le bordel ça va 5 minutes !")
+                await self.karma.send_log(server, "softban", "Softban", "{} à été softban par {}".format(user.name, author.name))
             except discord.errors.Forbidden:
                 await self.bot.say("**Impossible** | L'utilisateur visé est plus haut que moi dans la hiérarchie.")
                 await self.bot.delete_message(msg)
@@ -495,6 +501,8 @@ class Mod:
                                 user=user,
                                 reason=reason)
             await self.bot.say("**Muet** | L'utilisateur ne peut plus parler sur ce channel")
+            await self.karma.send_log(server, "mute", "Membre muet", "{} à été mis muet par {}
+                                      ".format(user.name, author.name))
 
     @checks.mod_or_permissions(ban_members=True)
     @mute.command(name="server", pass_context=True, no_pm=True)
@@ -536,6 +544,8 @@ class Mod:
                             user=user,
                             reason=reason)
         await self.bot.say("**Muet** | L'utilisateur ne peut plus parler sur tous les channels de ce serveur")
+        await self.karma.send_log(server, "mute", "Membre muet", "{} à été mis muet par {}
+                                      ".format(user.name, author.name))
 
     @commands.group(pass_context=True, no_pm=True, invoke_without_command=True)
     @checks.mod_or_permissions(ban_members=True)
@@ -586,6 +596,8 @@ class Mod:
                 del self._perms_cache[user.id]  # cleanup
             dataIO.save_json("data/mod/perms_cache.json", self._perms_cache)
             await self.bot.say("**Démute** | L'utilisateur peut de nouveau parler.")
+            await self.karma.send_log(server, "mute", "Membre démuté", "{} à été démuté par {}
+                                      ".format(user.name, author.name))
 
     @checks.mod_or_permissions(ban_members=True)
     @unmute.command(name="server", pass_context=True, no_pm=True)
@@ -627,6 +639,8 @@ class Mod:
             del self._perms_cache[user.id]  # cleanup
         dataIO.save_json("data/mod/perms_cache.json", self._perms_cache)
         await self.bot.say("**Demute** | L'utilisateur peut de nouveau parler sur tout le serveur.")
+        await self.karma.send_log(server, "mute", "Membre démuté", "{} à été démuté par {}
+                                      ".format(user.name, author.name))
 
     @commands.group(pass_context=True)
     @checks.mod_or_permissions(manage_messages=True)
